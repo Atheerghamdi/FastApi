@@ -221,6 +221,7 @@
 
 # #     ordered_student_locations = [(leg["start_location"]["lat"], leg["start_location"]["lng"]) for leg in data["routes"][0]["legs"]]
 # #     return ordered_student_locations
+
 # from fastapi import FastAPI, HTTPException
 # import mysql.connector
 # import pandas as pd
