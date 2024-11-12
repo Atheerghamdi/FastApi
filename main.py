@@ -314,6 +314,7 @@ import json
 
 app = FastAPI()
 
+
 # تحميل بيانات اعتماد Firebase من متغير البيئة
 cred_data = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 if cred_data:
@@ -349,7 +350,8 @@ async def calculate_path(cluster_label: str = "Cluster 1"):
     try:
         # جلب بيانات الطلاب من Firestore حيث Final_Cluster هو Cluster 1
         db = firestore.client()
-        students_ref = db.collection("cluster").where("Final_Cluster", "==", cluster_label)
+        students_ref = db.collection("cluster").where("Final_Cluster", "==", cluster_label).filter("Final_Cluster", "==", cluster_label)
+
         students_docs = students_ref.stream()
 
         # تحويل البيانات إلى DataFrame
@@ -365,7 +367,7 @@ async def calculate_path(cluster_label: str = "Cluster 1"):
 
         # تحقق من عدد الطلاب
         if len(data_frame) != 4:
-            return {"error": "Expected 8 students in the specified cluster, but got a different count."}
+            return {"error": "Expected 4 students in the specified cluster, but got a different count."}
 
         # تحويل مواقع الطلاب إلى قائمة إحداثيات
         student_locations = list(zip(data_frame['latitude'], data_frame['longitude']))
