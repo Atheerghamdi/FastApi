@@ -249,7 +249,7 @@ CLUSTER_LABEL = "Cluster 2"
 # School location coordinates in Alhamra, Jeddah
 school_location = (21.548888, 39.177222)
 
-@app.get("/calculate-path")
+@app.get("/")
 async def calculate_path(cluster_label: str = "Cluster 2"):
     try:
         # Connect to the database
