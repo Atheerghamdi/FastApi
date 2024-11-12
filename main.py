@@ -307,18 +307,14 @@ from fastapi import FastAPI, HTTPException
 import pandas as pd
 import requests
 from fastapi.middleware.cors import CORSMiddleware
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 
 app = FastAPI()
 
-# تهيئة Firebase Admin SDK باستخدام ملف JSON
-import os
-import json
-import firebase_admin
-from firebase_admin import credentials
-
-# تحميل بيانات اعتماد Firebase من متغير البيئة
+# Load Firebase credentials from environment variable
 cred_data = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 if cred_data:
     cred_json = json.loads(cred_data)
@@ -326,12 +322,11 @@ if cred_data:
     firebase_admin.initialize_app(cred)
 else:
     print("Error: GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable not set")
-firebase_admin.initialize_app(cred_data)
 
-# تهيئة Firestore
+# Initialize Firestore
 db = firestore.client()
 
-# السماح بطلبات CORS من origins محددة
+# Allow CORS requests from specific origins
 origins = [
     "http://localhost:8100",
     "http://127.0.0.1:8100"
@@ -345,20 +340,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = 'AIzaSyCMSB58R5jEPTFXpiEvhMOlM03YQBnweU4'  # استبدلها بمفتاح API الخاص بك
+# Use an environment variable for the API Key
+API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 CLUSTER_LABEL = "Cluster 1"
 
-# موقع المدرسة في الحمراء، جدة
+# School location in Alhamra, Jeddah
 school_location = (21.548888, 39.177222)
 
 @app.get("/")
 async def calculate_path(cluster_label: str = "Cluster 1"):
     try:
-        # جلب بيانات الطلاب من Firestore حيث Final_Cluster هو Cluster 1
+        # Fetch student data from Firestore where Final_Cluster is Cluster 1
         students_ref = db.collection("cluster").where("Final_Cluster", "==", cluster_label)
         students_docs = students_ref.stream()
 
-        # تحويل البيانات إلى DataFrame
+        # Convert data to DataFrame
         students_data = []
         for doc in students_docs:
             doc_data = doc.to_dict()
@@ -369,17 +365,17 @@ async def calculate_path(cluster_label: str = "Cluster 1"):
 
         data_frame = pd.DataFrame(students_data)
 
-        # تحقق من عدد الطلاب
-        if len(data_frame) != 4:
+        # Check the number of students
+        if len(data_frame) != 8:
             return {"error": "Expected 8 students in the specified cluster, but got a different count."}
 
-        # تحويل مواقع الطلاب إلى قائمة إحداثيات
+        # Convert student locations to a list of coordinates
         student_locations = list(zip(data_frame['latitude'], data_frame['longitude']))
 
-        # إضافة موقع المدرسة كنقطة بداية ونهاية
+        # Add school location as start and end point
         locations_with_school = [school_location] + student_locations + [school_location]
 
-        # حساب المسار الأمثل
+        # Calculate optimal path
         optimal_path = calculate_optimal_path(locations_with_school)
 
         return {"route": optimal_path}
