@@ -366,8 +366,8 @@ async def calculate_path(cluster_label: str = "Cluster 1"):
         data_frame = pd.DataFrame(students_data)
 
         # Check the number of students
-        if len(data_frame) != 8:
-            return {"error": "Expected 8 students in the specified cluster, but got a different count."}
+        if len(data_frame) != 4:
+            return {"error": "Expected 4 students in the specified cluster, but got a different count."}
 
         # Convert student locations to a list of coordinates
         student_locations = list(zip(data_frame['latitude'], data_frame['longitude']))
