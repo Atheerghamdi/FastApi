@@ -341,7 +341,7 @@ app.add_middleware(
 )
 
 # Use an environment variable for the API Key
-API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
+API_KEY = os.getenv("AIzaSyCMSB58R5jEPTFXpiEvhMOlM03YQBnweU4")
 CLUSTER_LABEL = "Cluster 1"
 
 # School location in Alhamra, Jeddah
