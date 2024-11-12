@@ -307,26 +307,24 @@ from fastapi import FastAPI, HTTPException
 import pandas as pd
 import requests
 from fastapi.middleware.cors import CORSMiddleware
-import os
-import json
 import firebase_admin
 from firebase_admin import credentials, firestore
+import os
+import json
 
 app = FastAPI()
 
-# Load Firebase credentials from environment variable
+# تحميل بيانات اعتماد Firebase من متغير البيئة
 cred_data = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 if cred_data:
     cred_json = json.loads(cred_data)
     cred = credentials.Certificate(cred_json)
     firebase_admin.initialize_app(cred)
+    print("Firebase initialized successfully")
 else:
     print("Error: GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable not set")
 
-# Initialize Firestore
-db = firestore.client()
-
-# Allow CORS requests from specific origins
+# السماح بطلبات CORS من origins محددة
 origins = [
     "http://localhost:8100",
     "http://127.0.0.1:8100"
@@ -340,21 +338,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Use an environment variable for the API Key
-API_KEY = os.getenv("AIzaSyCMSB58R5jEPTFXpiEvhMOlM03YQBnweU4")
+API_KEY = os.getenv("AIzaSyCMSB58R5jEPTFXpiEvhMOlM03YQBnweU4")  # تأكد من إضافة مفتاح API في إعدادات Heroku
 CLUSTER_LABEL = "Cluster 1"
 
-# School location in Alhamra, Jeddah
+# موقع المدرسة في الحمراء، جدة
 school_location = (21.548888, 39.177222)
 
 @app.get("/")
 async def calculate_path(cluster_label: str = "Cluster 1"):
     try:
-        # Fetch student data from Firestore where Final_Cluster is Cluster 1
+        # جلب بيانات الطلاب من Firestore حيث Final_Cluster هو Cluster 1
+        db = firestore.client()
         students_ref = db.collection("cluster").where("Final_Cluster", "==", cluster_label)
         students_docs = students_ref.stream()
 
-        # Convert data to DataFrame
+        # تحويل البيانات إلى DataFrame
         students_data = []
         for doc in students_docs:
             doc_data = doc.to_dict()
@@ -365,24 +363,24 @@ async def calculate_path(cluster_label: str = "Cluster 1"):
 
         data_frame = pd.DataFrame(students_data)
 
-        # Check the number of students
+        # تحقق من عدد الطلاب
         if len(data_frame) != 4:
-            return {"error": "Expected 4 students in the specified cluster, but got a different count."}
+            return {"error": "Expected 8 students in the specified cluster, but got a different count."}
 
-        # Convert student locations to a list of coordinates
+        # تحويل مواقع الطلاب إلى قائمة إحداثيات
         student_locations = list(zip(data_frame['latitude'], data_frame['longitude']))
 
-        # Add school location as start and end point
+        # إضافة موقع المدرسة كنقطة بداية ونهاية
         locations_with_school = [school_location] + student_locations + [school_location]
 
-        # Calculate optimal path
+        # حساب المسار الأمثل
         optimal_path = calculate_optimal_path(locations_with_school)
 
         return {"route": optimal_path}
 
     except Exception as e:
         print("Error:", e)
-        raise HTTPException(status_code=500, detail="An error occurred")
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 def calculate_optimal_path(locations):
     if len(locations) > 8:
@@ -397,8 +395,9 @@ def calculate_optimal_path(locations):
     data = response.json()
 
     if data["status"] != "OK":
-        print("Google Maps API error:", data["status"])
-        raise HTTPException(status_code=500, detail="Error from Google Maps API")
+        error_message = data.get("error_message", "Unknown error")
+        print("Google Maps API error:", data["status"], "-", error_message)
+        raise HTTPException(status_code=500, detail=f"Error from Google Maps API: {data['status']} - {error_message}")
 
     ordered_student_locations = [(leg["start_location"]["lat"], leg["start_location"]["lng"]) for leg in data["routes"][0]["legs"]]
     return ordered_student_locations
