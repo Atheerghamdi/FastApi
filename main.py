@@ -313,8 +313,20 @@ from firebase_admin import credentials, firestore
 app = FastAPI()
 
 # تهيئة Firebase Admin SDK باستخدام ملف JSON
-cred = credentials.Certificate("C:\\Users\\96650\\Downloads\\yaseer-cdb7f-firebase-adminsdk-s71u4-5de644336e.json")
-firebase_admin.initialize_app(cred)
+import os
+import json
+import firebase_admin
+from firebase_admin import credentials
+
+# تحميل بيانات اعتماد Firebase من متغير البيئة
+cred_data = os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+if cred_data:
+    cred_json = json.loads(cred_data)
+    cred = credentials.Certificate(cred_json)
+    firebase_admin.initialize_app(cred)
+else:
+    print("Error: GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable not set")
+firebase_admin.initialize_app(cred_data)
 
 # تهيئة Firestore
 db = firestore.client()
