@@ -351,8 +351,7 @@ async def calculate_path(cluster_label: str = "Cluster 1"):
     try:
         # جلب بيانات الطلاب من Firestore حيث Final_Cluster هو Cluster 1
         db = firestore.client()
-        students_ref = db.collection("cluster").where("Final_Cluster", "==", cluster_label).filter("Final_Cluster", "==", cluster_label)
-
+        students_ref = db.collection("cluster").where("Final_Cluster", "==", cluster_label)
         students_docs = students_ref.stream()
 
         # تحويل البيانات إلى DataFrame
