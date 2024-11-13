@@ -340,7 +340,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-API_KEY = os.getenv("AIzaSyCMSB58R5jEPTFXpiEvhMOlM03YQBnweU4")  # تأكد من إضافة مفتاح API في إعدادات Heroku
+API_KEY = os.getenv("API_KEY")  # تأكد من إضافة مفتاح API في إعدادات Heroku
 CLUSTER_LABEL = "Cluster 1"
 
 # موقع المدرسة في الحمراء، جدة
