@@ -388,10 +388,12 @@ def calculate_optimal_path(locations):
     if len(locations) > 8:
         raise HTTPException(status_code=400, detail="Too many locations provided.")
 
+    # إنشاء نقاط الطريق (waypoints) بدون المدرسة
     waypoints = '|'.join([f"{lat},{lng}" for lat, lng in locations[1:-1]])  # excluding school from waypoints
-    start = f"{locations[0][0]},{locations[0][1]}"  # school as start
-    end = f"{locations[-1][0]},{locations[-1][1]}"  # school as end
+    start = f"{locations[0][0]},{locations[0][1]}"  # المدرسة كنقطة البداية
+    end = f"{locations[0][0]},{locations[0][1]}"  # المدرسة كنقطة النهاية
 
+    # إنشاء طلب API
     url = f"https://maps.googleapis.com/maps/api/directions/json?origin={start}&destination={end}&waypoints=optimize:true|{waypoints}&key={API_KEY}"
     response = requests.get(url)
     data = response.json()
@@ -401,5 +403,10 @@ def calculate_optimal_path(locations):
         print("Google Maps API error:", data["status"], "-", error_message)
         raise HTTPException(status_code=500, detail=f"Error from Google Maps API: {data['status']} - {error_message}")
 
+    # استخراج المواقع المُرتبة بناءً على الاستجابة
     ordered_student_locations = [(leg["start_location"]["lat"], leg["start_location"]["lng"]) for leg in data["routes"][0]["legs"]]
+
+    # إضافة المدرسة كنقطة النهاية
+    ordered_student_locations.append((locations[0][0], locations[0][1]))
+
     return ordered_student_locations
