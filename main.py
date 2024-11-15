@@ -391,7 +391,7 @@ def calculate_optimal_path(locations):
     # إنشاء نقاط الطريق (waypoints) بدون المدرسة
     waypoints = '|'.join([f"{lat},{lng}" for lat, lng in locations[1:-1]])  # excluding school from waypoints
     start = f"{locations[0][0]},{locations[0][1]}"  # المدرسة كنقطة البداية
-    end = f"{locations[0][0]},{locations[0][1]}"  # المدرسة كنقطة النهاية
+    end = start  # المدرسة كنقطة النهاية
 
     # إنشاء طلب API
     url = f"https://maps.googleapis.com/maps/api/directions/json?origin={start}&destination={end}&waypoints=optimize:true|{waypoints}&key={API_KEY}"
@@ -406,7 +406,13 @@ def calculate_optimal_path(locations):
     # استخراج المواقع المُرتبة بناءً على الاستجابة
     ordered_student_locations = [(leg["start_location"]["lat"], leg["start_location"]["lng"]) for leg in data["routes"][0]["legs"]]
 
-    # إضافة المدرسة كنقطة النهاية
-    ordered_student_locations.append((locations[0][0], locations[0][1]))
+    # إجبار نقطة النهاية لتكون نفس إحداثيات المدرسة
+    ordered_student_locations.append((locations[0][0], locations[0][1]))  # المدرسة كنهاية
+
+    # إزالة أي تكرار لنقطة البداية والنهاية إذا كان موجودًا
+    if ordered_student_locations[0] == ordered_student_locations[-1]:
+        ordered_student_locations = ordered_student_locations[:-1]
 
     return ordered_student_locations
+
+
