@@ -159,11 +159,15 @@ async def calculate_path(
         students_data = []
         for doc in students_docs:
             doc_data = doc.to_dict()
-            students_data.append({
-                'name': doc_data.get('name', 'Unknown'),  # اسم الطالب
-                'latitude': float(doc_data['lat']),
-                'longitude': float(doc_data['lng'])
-            })
+             # تحقق من أن الإحداثيات موجودة وصحيحة
+            if 'lat' in doc_data and 'lng' in doc_data and doc_data['lat'] is not None and doc_data['lng'] is not None:
+                students_data.append({
+                    'name': doc_data.get('name', 'Unknown'),  # اسم الطالب
+                    'latitude': float(doc_data['lat']),
+                    'longitude': float(doc_data['lng'])
+                })
+            else:
+                print(f"Skipping student with missing or invalid coordinates: {doc_data}")
 
         if len(students_data) == 0:
             return {"error": "No students found in the specified cluster."}
